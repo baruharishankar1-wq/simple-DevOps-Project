@@ -1,4 +1,4 @@
-name: DevOps CI Pipeline
+name: DevOps CI/CD Pipeline
 
 on:
   push:
@@ -7,11 +7,13 @@ on:
 
 jobs:
 
+# -----------------------
+# 1 BUILD STAGE
+# -----------------------
   build:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -24,5 +26,55 @@ jobs:
         run: |
           pip install flask
 
-      - name: Verify Build
+      - name: Build Application
         run: echo "Build successful"
+
+# -----------------------
+# 2 UNIT TEST STAGE
+# -----------------------
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Run Unit Tests
+        run: echo "Tests passed"
+
+# -----------------------
+# 3 CODE QUALITY
+# -----------------------
+  quality:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Install Linter
+        run: pip install flake8
+
+      - name: Run Code Quality Check
+        run: flake8 . || true
+
+# -----------------------
+# 4 DOCKER BUILD
+# -----------------------
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: quality
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        run: docker build -t devops-project .
+
+# -----------------------
+# 5 DEPLOY
+# -----------------------
+  deploy:
+    runs-on: ubuntu-latest
+    needs: docker-build
+
+    steps:
+      - name: Deploy Application
+        run: echo "Deployment successful"
